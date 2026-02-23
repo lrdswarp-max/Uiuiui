@@ -77,5 +77,7 @@ hub() {
     esac
 }
 
-init_db
-hub "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    init_db
+    hub "$@"
+fi
