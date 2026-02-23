@@ -134,6 +134,40 @@ safe_copy() {
   run "cp '$src' '$dest'"
 }
 
+generate_rollback_script() {
+  tac "$1" | awk -F'|' "
+    BEGIN {
+      q = \"\x27\"
+      bs = \"\\\\\\\\\"
+    }
+    function esc_eval(s) {
+      gsub(q, q bs q q, s)
+      return q s q
+    }
+    function esc_dollar(s) {
+      gsub(bs, \"\\\\\\\\x5c\", s)
+      gsub(q, \"\\\\\\\\x27\", s)
+      return \"$'\" s \"'\"
+    }
+    \$1 == \"delete\" {
+      f = esc_eval(\$2)
+      cmd = \"rm -f \" f
+      print \"[[ -e \" esc_dollar(\$2) \" ]] && run \" esc_dollar(cmd)
+    }
+    \$1 == \"restore\" {
+      src = esc_eval(\$2)
+      dst = esc_eval(\$3)
+      cmd = \"cp -a \" src \" \" dst
+      print \"[[ -e \" esc_dollar(\$2) \" ]] && run \" esc_dollar(cmd)
+    }
+    \$1 == \"remove_dir\" {
+      f = esc_eval(\$2)
+      cmd = \"rmdir \" f \" 2>/dev/null || true\"
+      print \"[[ -d \" esc_dollar(\$2) \" ]] && run \" esc_dollar(cmd)
+    }
+  "
+}
+
 rollback_step() {
   local step="$1"
   local mf
@@ -141,19 +175,7 @@ rollback_step() {
   [[ -f "$mf" ]] || return 0
 
   log "Falha detectada na etapa '$step'. Fazendo rollback apenas desta etapa..."
-  while IFS='|' read -r action a b; do
-    case "$action" in
-      delete)
-        [[ -e "$a" ]] && run "rm -f '$a'"
-        ;;
-      restore)
-        [[ -e "$a" ]] && run "cp -a '$a' '$b'"
-        ;;
-      remove_dir)
-        [[ -d "$a" ]] && run "rmdir '$a' 2>/dev/null || true"
-        ;;
-    esac
-  done < <(tac "$mf")
+  source <(generate_rollback_script "$mf")
 }
 
 run_step() {
