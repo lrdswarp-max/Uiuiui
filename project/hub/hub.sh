@@ -6,10 +6,11 @@ HUB_DIR="$(dirname "$HUB_DB")"
 mkdir -p "$HUB_DIR"
 
 init_db() {
+  if ! command -v sqlite3 >/dev/null 2>&1; then
+      return
+  fi
+
   if [[ ! -f "$HUB_DB" ]]; then
-    if ! command -v sqlite3 >/dev/null 2>&1; then
-        return
-    fi
     sqlite3 "$HUB_DB" <<SQL_EOF
 CREATE TABLE IF NOT EXISTS skills (
     id INTEGER PRIMARY KEY,
@@ -29,6 +30,9 @@ INSERT INTO skills (name, category, description, examples, usage) VALUES
 ('git pull', 'git', 'Baixar atualizações', 'git pull origin main', 'git pull [remote] [branch]');
 SQL_EOF
   fi
+
+  # Optimize with index for DISTINCT category queries
+  sqlite3 "$HUB_DB" "CREATE INDEX IF NOT EXISTS idx_skills_category ON skills(category);"
 }
 
 hub() {
