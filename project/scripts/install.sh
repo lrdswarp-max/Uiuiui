@@ -179,6 +179,7 @@ prepare_dirs() {
 
 install_setup_scripts() {
   [[ "$INCLUDE_SETUP_SCRIPTS" == "1" ]] || { log "Setup scripts desativados pelo usuário"; return 0; }
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/common.sh" "$TERMUX_DIR/scripts/common.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-base.sh" "$TERMUX_DIR/scripts/setup-base.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-git-ssh.sh" "$TERMUX_DIR/scripts/setup-git-ssh.sh" || return 1
 }
