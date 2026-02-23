@@ -1,56 +1,61 @@
 # Uiuiui - Termux DevStack (estruturado)
 
-Este repositório está organizado como projeto real para Termux, com scripts inteligentes e instalação com retomada por etapa.
+Este repositório é uma **DevStack modular e automatizada** para Termux, projetada para transformar seu Android em um ambiente de desenvolvimento profissional.
 
-## Estrutura
+## Principais Recursos
 
-- `DOCUMENTACAO_COMPLETA.md` → material original importado.
-- `project/scripts/` → setup base, git/ssh e instalador inteligente.
-- `project/hub/` → utilitário hub e sincronização.
-- `project/config/` → aliases e configuração de LLM.
-- `scripts/simulate_termux.sh` → simulação local do fluxo no estilo Termux.
+- **Instalador Inteligente**: Instalação por etapas com capacidade de retomada (checkpoint).
+- **Hub MCP Centralizado**: Sistema de gerenciamento de conhecimento e skills via SQLite.
+- **Dual-Shell**: Integração perfeita entre Termux nativo e Ubuntu (proot-distro).
+- **CLI LLMs Unificado**: Acesso centralizado a Claude, OpenAI, Groq e Gemini.
+- **Dev Stack Web**: Pronto para Next.js, Supabase e Code-Server (VS Code Web).
 
-## Instalador inteligente (interativo + retomada)
+## Estrutura do Repositório
+
+- `DOCUMENTACAO_COMPLETA.md` → Guia detalhado de todo o ecossistema.
+- `project/scripts/` → Scripts de setup automatizados.
+- `project/hub/` → Utilitário Hub e sincronização Termux ↔ Ubuntu.
+- `project/config/` → Configurações de shell (Zsh) e LLMs.
+- `scripts/simulate_termux.sh` → Simulador de ambiente para testes.
+
+## Instalação
+
+Para iniciar o instalador interativo:
 
 ```bash
 bash project/scripts/install.sh
 ```
 
-Recursos:
-- menu interativo com personalização por componente (aliases, hub, LLM, setup scripts);
-- progresso salvo em `~/.termux/.installer/state.env`;
-- se uma etapa falhar, faz rollback da etapa atual;
-- ao rodar novamente, continua das etapas pendentes (não precisa recomeçar tudo).
-
-## Modo não interativo
+### Modo não interativo (Automático)
 
 ```bash
 bash project/scripts/install.sh --non-interactive
 ```
 
-Com reset de progresso:
+## Comandos Principais Pós-Instalação
 
 ```bash
-bash project/scripts/install.sh --non-interactive --reset-state
-```
-
-## Comandos principais pós-instalação
-
-```bash
+# Carregar aliases
 source ~/.termux/aliases.sh
+
+# Setup base (pacotes do sistema)
 ~/.termux/scripts/setup-base.sh
+
+# Setup de chaves SSH
 ~/.termux/scripts/setup-git-ssh.sh seu-email@exemplo.com
-hub add "minha anotação"
-hub search anotação
+
+# Usar o Hub
+hub add "minha nota"
+hub search nota
 ```
 
-## Download via curl (Google Drive)
+## Documentação Detalhada
 
-```bash
-./scripts/fetch_from_drive.sh 1uXh9Z4Y2-qkRn0cpq0auwsLjjNuAYLgE DOCUMENTACAO_COMPLETA.md
-```
+Consulte o arquivo [DOCUMENTACAO_COMPLETA.md](DOCUMENTACAO_COMPLETA.md) para o guia completo de configuração e uso de cada componente.
 
-## Simulação local (como se fosse Termux)
+## Testes e Simulação
+
+Para validar o ambiente de forma segura em uma pasta temporária:
 
 ```bash
 bash scripts/simulate_termux.sh

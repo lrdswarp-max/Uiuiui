@@ -118,6 +118,12 @@ safe_mkdir() {
 safe_copy() {
   local step="$1" src="$2" dest="$3"
   local backup
+
+  if [[ ! -f "$src" ]]; then
+    err "Arquivo fonte não encontrado: $src"
+    return 1
+  fi
+
   if [[ -e "$dest" ]]; then
     backup="$STATE_DIR/backups/${step}__$(echo "$dest" | tr '/ ' '__')"
     run "cp -a '$dest' '$backup'"
@@ -193,6 +199,7 @@ install_setup_scripts() {
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-zsh.sh" "$TERMUX_DIR/scripts/setup-zsh.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-proot.sh" "$TERMUX_DIR/scripts/setup-proot.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-code-server.sh" "$TERMUX_DIR/scripts/setup-code-server.sh" || return 1
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-llms.sh" "$TERMUX_DIR/scripts/setup-llms.sh" || return 1
 }
 
 install_hub() {
@@ -210,22 +217,26 @@ install_llm() {
   [[ "$INCLUDE_LLM" == "1" ]] || { log "Config LLM desativada pelo usuário"; return 0; }
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/config/llm/config.json" "$LLM_DIR/config.json" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/config/llm/aliases/llm-aliases.sh" "$LLM_DIR/aliases/llm-aliases.sh" || return 1
+  if [[ ! -f "$LLM_DIR/.env" && -f "$ROOT_DIR/config/llm/.env.template" ]]; then
+    safe_copy "$CURRENT_STEP" "$ROOT_DIR/config/llm/.env.template" "$LLM_DIR/.env" || return 1
+  fi
 }
 
 install_zsh() {
   [[ "$INCLUDE_ZSH" == "1" ]] || { log "Setup Zsh desativado pelo usuário"; return 0; }
-  # O setup real é feito pelo script copiado, aqui apenas garantimos que o script está lá
-  # e informamos o usuário.
+  log "Script setup-zsh.sh preparado em $TERMUX_DIR/scripts/"
   return 0
 }
 
 install_proot() {
   [[ "$INCLUDE_PROOT" == "1" ]] || { log "Setup Proot desativado pelo usuário"; return 0; }
+  log "Script setup-proot.sh preparado em $TERMUX_DIR/scripts/"
   return 0
 }
 
 install_code_server() {
   [[ "$INCLUDE_CODE_SERVER" == "1" ]] || { log "Setup Code-Server desativado pelo usuário"; return 0; }
+  log "Script setup-code-server.sh preparado em $TERMUX_DIR/scripts/"
   return 0
 }
 
@@ -305,6 +316,7 @@ run_install() {
   log "  source $TERMUX_DIR/aliases.sh"
   log "  $TERMUX_DIR/scripts/setup-base.sh"
   log "  $TERMUX_DIR/scripts/setup-git-ssh.sh seu@email.com"
+  [[ "$INCLUDE_LLM" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-llms.sh"
   [[ "$INCLUDE_ZSH" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-zsh.sh"
   [[ "$INCLUDE_PROOT" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-proot.sh"
   [[ "$INCLUDE_CODE_SERVER" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-code-server.sh"
