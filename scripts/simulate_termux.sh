@@ -14,9 +14,11 @@ TARGET_HOME="$SIM_HOME" "$REPO_DIR/project/scripts/install.sh" --non-interactive
 echo "[sim] Rodando novamente para validar retomada (deve pular etapas concluídas)"
 TARGET_HOME="$SIM_HOME" "$REPO_DIR/project/scripts/install.sh" --non-interactive
 
+# Isolar HOME para que o hub use o diretório simulado
+export HOME="$SIM_HOME"
 source "$SIM_HOME/.termux/aliases.sh"
-"$SIM_HOME/.termux/hub/hub.sh" add "Teste de simulação termux"
-"$SIM_HOME/.termux/hub/hub.sh" search "simulação"
+"$SIM_HOME/.termux/hub/hub.sh" add "simulacao" "teste" "Teste de simulação termux"
+"$SIM_HOME/.termux/hub/hub.sh" search "simulacao"
 
 echo "[sim] Estrutura criada:"
 find "$SIM_HOME/.termux" -maxdepth 4 -type f | sort

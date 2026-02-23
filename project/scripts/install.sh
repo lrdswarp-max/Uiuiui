@@ -16,10 +16,14 @@ INCLUDE_SETUP_SCRIPTS=1
 INCLUDE_HUB=1
 INCLUDE_ALIASES=1
 INCLUDE_LLM=1
+INCLUDE_ZSH=1
+INCLUDE_PROOT=1
+INCLUDE_CODE_SERVER=1
+INCLUDE_ZSHRC=1
 INTERACTIVE=-1
 RESET_STATE=0
 
-STEP_ORDER=(prepare_dirs install_setup_scripts install_hub install_aliases install_llm apply_permissions)
+STEP_ORDER=(prepare_dirs install_setup_scripts install_hub install_aliases install_llm install_zsh install_proot install_code_server install_zshrc apply_permissions)
 COMPLETED_STEPS=()
 
 usage() {
@@ -52,6 +56,10 @@ state_write() {
     echo "INCLUDE_HUB=$INCLUDE_HUB"
     echo "INCLUDE_ALIASES=$INCLUDE_ALIASES"
     echo "INCLUDE_LLM=$INCLUDE_LLM"
+    echo "INCLUDE_ZSH=$INCLUDE_ZSH"
+    echo "INCLUDE_PROOT=$INCLUDE_PROOT"
+    echo "INCLUDE_CODE_SERVER=$INCLUDE_CODE_SERVER"
+    echo "INCLUDE_ZSHRC=$INCLUDE_ZSHRC"
     echo "COMPLETED_STEPS='${COMPLETED_STEPS[*]}'"
   } > "$STATE_FILE"
 }
@@ -182,6 +190,9 @@ install_setup_scripts() {
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/common.sh" "$TERMUX_DIR/scripts/common.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-base.sh" "$TERMUX_DIR/scripts/setup-base.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-git-ssh.sh" "$TERMUX_DIR/scripts/setup-git-ssh.sh" || return 1
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-zsh.sh" "$TERMUX_DIR/scripts/setup-zsh.sh" || return 1
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-proot.sh" "$TERMUX_DIR/scripts/setup-proot.sh" || return 1
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-code-server.sh" "$TERMUX_DIR/scripts/setup-code-server.sh" || return 1
 }
 
 install_hub() {
@@ -199,6 +210,29 @@ install_llm() {
   [[ "$INCLUDE_LLM" == "1" ]] || { log "Config LLM desativada pelo usuário"; return 0; }
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/config/llm/config.json" "$LLM_DIR/config.json" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/config/llm/aliases/llm-aliases.sh" "$LLM_DIR/aliases/llm-aliases.sh" || return 1
+}
+
+install_zsh() {
+  [[ "$INCLUDE_ZSH" == "1" ]] || { log "Setup Zsh desativado pelo usuário"; return 0; }
+  # O setup real é feito pelo script copiado, aqui apenas garantimos que o script está lá
+  # e informamos o usuário.
+  return 0
+}
+
+install_proot() {
+  [[ "$INCLUDE_PROOT" == "1" ]] || { log "Setup Proot desativado pelo usuário"; return 0; }
+  return 0
+}
+
+install_code_server() {
+  [[ "$INCLUDE_CODE_SERVER" == "1" ]] || { log "Setup Code-Server desativado pelo usuário"; return 0; }
+  return 0
+}
+
+install_zshrc() {
+  [[ "$INCLUDE_ZSHRC" == "1" ]] || { log "Config .zshrc desativada pelo usuário"; return 0; }
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/config/zshrc" "$TARGET_HOME/.zshrc.template" || return 1
+  log "Template .zshrc copiado para $TARGET_HOME/.zshrc.template"
 }
 
 apply_permissions() {
@@ -225,6 +259,10 @@ Concluídas: ${COMPLETED_STEPS[*]:-(nenhuma)}
 [S] Toggle setup scripts (atual: $INCLUDE_SETUP_SCRIPTS)
 [H] Toggle hub (atual: $INCLUDE_HUB)
 [G] Toggle config LLM (atual: $INCLUDE_LLM)
+[1] Toggle Zsh Setup (atual: $INCLUDE_ZSH)
+[2] Toggle Proot Setup (atual: $INCLUDE_PROOT)
+[3] Toggle Code-Server (atual: $INCLUDE_CODE_SERVER)
+[4] Toggle .zshrc Template (atual: $INCLUDE_ZSHRC)
 [R] Reiniciar progresso salvo
 [I] Iniciar/continuar instalação
 [Q] Sair
@@ -244,6 +282,10 @@ MENU
       S) INCLUDE_SETUP_SCRIPTS=$((1 - INCLUDE_SETUP_SCRIPTS)); state_write ;;
       H) INCLUDE_HUB=$((1 - INCLUDE_HUB)); state_write ;;
       G) INCLUDE_LLM=$((1 - INCLUDE_LLM)); state_write ;;
+      1) INCLUDE_ZSH=$((1 - INCLUDE_ZSH)); state_write ;;
+      2) INCLUDE_PROOT=$((1 - INCLUDE_PROOT)); state_write ;;
+      3) INCLUDE_CODE_SERVER=$((1 - INCLUDE_CODE_SERVER)); state_write ;;
+      4) INCLUDE_ZSHRC=$((1 - INCLUDE_ZSHRC)); state_write ;;
       R) restart_progress ;;
       I) return 0 ;;
       Q) exit 0 ;;
@@ -263,6 +305,18 @@ run_install() {
   log "  source $TERMUX_DIR/aliases.sh"
   log "  $TERMUX_DIR/scripts/setup-base.sh"
   log "  $TERMUX_DIR/scripts/setup-git-ssh.sh seu@email.com"
+  [[ "$INCLUDE_ZSH" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-zsh.sh"
+  [[ "$INCLUDE_PROOT" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-proot.sh"
+  [[ "$INCLUDE_CODE_SERVER" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-code-server.sh"
+  [[ "$INCLUDE_ZSHRC" == "1" ]] && log "  cp $TARGET_HOME/.zshrc.template $TARGET_HOME/.zshrc"
+
+  if [[ "$INTERACTIVE" == "1" ]]; then
+    echo ""
+    read -r -p "Deseja executar setup-base.sh agora? (s/N): " run_base
+    if [[ "${run_base,,}" == "s" ]]; then
+        bash "$TERMUX_DIR/scripts/setup-base.sh"
+    fi
+  fi
 }
 
 while [[ $# -gt 0 ]]; do
