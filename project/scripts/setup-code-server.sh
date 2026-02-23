@@ -17,13 +17,19 @@ mkdir -p "$HOME/.config/code-server"
 
 CONFIG_FILE="$HOME/.config/code-server/config.yaml"
 if [[ ! -f "$CONFIG_FILE" ]]; then
+  if command -v openssl >/dev/null 2>&1; then
+    PASSWORD=$(openssl rand -hex 12)
+  else
+    PASSWORD=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 12 | head -n 1)
+  fi
+
   cat > "$CONFIG_FILE" <<YAML_EOF
 bind-addr: 127.0.0.1:8080
 auth: password
-password: termuxdev
+password: $PASSWORD
 cert: false
 YAML_EOF
-  log "Arquivo de configuração criado em $CONFIG_FILE (senha padrão: termuxdev)"
+  log "Arquivo de configuração criado em $CONFIG_FILE (senha gerada: $PASSWORD)"
 else
   log "Arquivo de configuração já existe."
 fi
