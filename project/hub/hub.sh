@@ -1,81 +1,58 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+# ~/.termux/hub/hub.sh
 
-HUB_DB="${HUB_DB:-$HOME/.termux/hub/database.db}"
-HUB_DIR="$(dirname "$HUB_DB")"
-mkdir -p "$HUB_DIR"
-
-init_db() {
-  if [[ ! -f "$HUB_DB" ]]; then
-    if ! command -v sqlite3 >/dev/null 2>&1; then
-        return
-    fi
-    sqlite3 "$HUB_DB" <<SQL_EOF
-CREATE TABLE IF NOT EXISTS skills (
-    id INTEGER PRIMARY KEY,
-    name TEXT UNIQUE,
-    category TEXT,
-    description TEXT,
-    examples TEXT,
-    usage TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO skills (name, category, description, examples, usage) VALUES
-('git clone', 'git', 'Clone um repositório', 'git clone https://github.com/user/repo', 'git clone <url>'),
-('npm install', 'npm', 'Instalar dependências', 'npm install / npm i', 'npm install [package]'),
-('npm run dev', 'npm', 'Iniciar dev server', 'npm run dev', 'npm run dev'),
-('git push', 'git', 'Enviar commits', 'git push origin main', 'git push [remote] [branch]'),
-('git pull', 'git', 'Baixar atualizações', 'git pull origin main', 'git pull [remote] [branch]');
-SQL_EOF
-  fi
-}
+HUB_DB="$HOME/.termux/hub/database.db"
 
 hub() {
-    local action="${1:-}"
-    shift || true
-
-    if ! command -v sqlite3 >/dev/null 2>&1; then
-        echo "sqlite3 não encontrado. Por favor, instale com: pkg install sqlite"
-        return 1
-    fi
+    local action="$1"
+    local query="$2"
 
     case "$action" in
         ask)
-            local query="${1:-}"
-            local q_esc="${query//\'/\'\'}"
-            sqlite3 "$HUB_DB" "SELECT description, usage, examples FROM skills WHERE name LIKE '%$q_esc%' LIMIT 1"
+            # Buscar no SQLite
+            sqlite3 "$HUB_DB" \
+                "SELECT description, usage, examples FROM skills WHERE name LIKE '%$query%' LIMIT 1"
             ;;
         search)
-            local query="${1:-}"
-            local q_esc="${query//\'/\'\'}"
-            sqlite3 "$HUB_DB" "SELECT name, description FROM skills WHERE name LIKE '%$q_esc%' OR category LIKE '%$q_esc%' OR description LIKE '%$q_esc%'"
+            # Buscar por categoria
+            sqlite3 "$HUB_DB" \
+                "SELECT name, description FROM skills WHERE category='$query' OR description LIKE '%$query%'"
             ;;
         list)
+            # Listar tudo
             sqlite3 "$HUB_DB" "SELECT DISTINCT category FROM skills"
             ;;
+        list-category)
+            # Listar por categoria
+            sqlite3 "$HUB_DB" \
+                "SELECT name FROM skills WHERE category='$query'"
+            ;;
         add)
-            local name="${1:-}"
-            local category="${2:-note}"
-            local description="${3:-$name}"
-            [[ -z "$name" ]] && { echo "uso: hub add <name> [cat] [desc]"; return 1; }
-            local n_esc="${name//\'/\'\'}"
-            local c_esc="${category//\'/\'\'}"
-            local d_esc="${description//\'/\'\'}"
-            sqlite3 "$HUB_DB" "INSERT INTO skills (name, category, description) VALUES ('$n_esc', '$c_esc', '$d_esc')"
-            echo "✓ Item '$name' adicionado em '$category'!"
+            # Adicionar skill
+            local name="$2"
+            local category="$3"
+            local description="$4"
+            sqlite3 "$HUB_DB" \
+                "INSERT INTO skills (name, category, description) VALUES ('$name', '$category', '$description')"
+            echo "✓ Skill '$name' adicionado!"
             ;;
         *)
             echo "Hub MCP - Central Knowledge System"
             echo ""
             echo "Uso:"
-            echo "  hub ask <comando>           - Buscar documentação"
-            echo "  hub search <palavra>        - Buscar por palavra-chave"
-            echo "  hub list                    - Listar categorias"
-            echo "  hub add <name> [cat] [desc] - Adicionar item (padrão cat: note)"
+            echo "  hub ask <comando>        - Buscar documentação"
+            echo "  hub search <palavra>     - Buscar por palavra-chave"
+            echo "  hub list                 - Listar categorias"
+            echo "  hub list-category <cat>  - Listar skills de categoria"
+            echo "  hub add <name> <cat> <desc> - Adicionar skill"
+            echo ""
+            echo "Exemplos:"
+            echo "  hub ask git clone"
+            echo "  hub search npm"
+            echo "  hub list-category git"
             ;;
     esac
 }
 
-init_db
-hub "$@"
+# Se chamado como script direto
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && hub "$@"

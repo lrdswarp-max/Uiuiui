@@ -4,17 +4,28 @@
       "cli": "claude",
       "enabled": true,
       "default": true,
-      "model": "claude-3-5-sonnet-latest"
+      "model": "claude-opus-4.5"
     },
     "openai": {
       "cli": "openai",
       "enabled": true,
-      "model": "gpt-4o"
+      "model": "gpt-5.1"
     },
     "groq": {
       "cli": "groq",
       "enabled": true,
       "model": "llama-3.3-70b"
+    },
+    "gemini": {
+      "method": "curl",
+      "enabled": true,
+      "model": "gemini-2.5-flash"
     }
+  },
+  "aliases": {
+    "cld": "claude",
+    "cod": "openai",
+    "grq": "groq",
+    "gem": "gemini"
   }
 }

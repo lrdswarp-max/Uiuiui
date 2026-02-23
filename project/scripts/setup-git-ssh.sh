@@ -1,30 +1,25 @@
-#!/usr/bin/env bash
-set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/common.sh"
+#!/bin/bash
+# ~/.termux/scripts/setup-git-ssh.sh
 
-EMAIL="${1:-}"
-if [[ -z "$EMAIL" ]]; then
-  err "Uso: $0 <email-github>"
-  exit 1
-fi
+echo "=== Configurando Git SSH ==="
 
-need_cmd git
-need_cmd ssh-keygen
+# Gerar chave SSH Ed25519
+ssh-keygen -t ed25519 -C "seu-email@example.com" -f ~/.ssh/id_ed25519 -N ""
 
-mkdir -p "$HOME/.ssh"
-KEY_PATH="$HOME/.ssh/id_ed25519"
+# Copiar chave pública
+echo "✓ Copie a chave abaixo e cole em GitHub → Settings → SSH Keys"
+cat ~/.ssh/id_ed25519.pub
 
-if [[ ! -f "$KEY_PATH" ]]; then
-  run "ssh-keygen -t ed25519 -C '$EMAIL' -f '$KEY_PATH' -N ''"
-else
-  log "Chave já existe: $KEY_PATH"
-fi
+# Testar conexão
+echo ""
+echo "Pressione Enter após adicionar a chave no GitHub..."
+read
 
-run "git config --global user.email '$EMAIL'"
-run "git config --global user.name 'Termux Dev'"
-run "git config --global init.defaultBranch main"
-run "git config --global pull.rebase false"
+ssh -T git@github.com
 
-log "Chave pública (adicione no GitHub):"
-cat "$KEY_PATH.pub"
+# Configurar Git global
+git config --global user.name "Seu Nome"
+git config --global user.email "seu-email@example.com"
+git config --global core.editor "nvim"
+
+echo "✓ Git SSH configurado!"

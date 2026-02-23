@@ -1,0 +1,124 @@
+#!/bin/bash
+# Crie este arquivo: ~/.zshrc
+
+cat > ~/.zshrc << 'ZSHRC_EOF'
+# ========== OH-MY-ZSH ==========
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+# Plugins
+plugins=(
+    git
+    command-not-found
+    colored-man-pages
+    extract
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+
+source $ZSH/oh-my-zsh.sh
+
+# Powerlevel10k
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# ========== LLM CONFIG (Centralizado) ==========
+export LLM_CONFIG_DIR="$HOME/.config/llm"
+
+# Carregar variáveis de ambiente
+if [ -f "$LLM_CONFIG_DIR/.env" ]; then
+    set -a
+    source "$LLM_CONFIG_DIR/.env"
+    set +a
+fi
+
+# Carregar aliases LLM
+if [ -f "$LLM_CONFIG_DIR/aliases/llm-aliases.sh" ]; then
+    source "$LLM_CONFIG_DIR/aliases/llm-aliases.sh"
+fi
+
+# ========== HUB MCP (Central Knowledge) ==========
+export HUB_DIR="$HOME/.termux/hub"
+if [ -f "$HUB_DIR/aliases.sh" ]; then
+    source "$HUB_DIR/aliases.sh"
+fi
+
+# ========== ALIASES ESSENCIAIS ==========
+alias ls='ls -lah --color=auto'
+alias ll='ls -lh'
+alias pj='cd ~/projects'
+alias dev='npm run dev'
+alias build='npm run build'
+alias test='npm test'
+alias start='npm start'
+
+# Git
+alias gs='git status'
+alias gp='git push'
+alias gl='git pull'
+alias gb='git branch'
+alias gc='git commit -m'
+alias ga='git add'
+alias gd='git diff'
+alias gco='git checkout'
+
+# Utilidades
+alias c='clear'
+alias h='history'
+alias n='nvim'
+alias mkdir='mkdir -pv'
+
+# Dev
+alias startx11='termux-x11 :0 -xstartup "dbus-launch --exit-with-session xfce4-session"'
+alias ubuntu='proot-distro login ubuntu'
+alias vim='nvim'
+
+# ========== FUNÇÕES CUSTOM ==========
+
+# Criar projeto Next.js rápido
+next-project() {
+    local name="${1:-my-app}"
+    npx create-next-app@latest "$name" \
+        --typescript \
+        --tailwind \
+        --app \
+        --eslint \
+        --import-alias "@/*" \
+        --skip-install=false
+    cd "$name"
+    npm install @supabase/supabase-js @supabase/auth-helpers-nextjs
+}
+
+# Sincronizar config LLM
+sync-llm() {
+    echo "Sincronizando config LLM..."
+    bash ~/.termux/hub/sync/termux-sync.sh
+    echo "✓ Sincronizado!"
+}
+
+# Ver status de tudo
+dev-status() {
+    echo "=== DEV ENVIRONMENT STATUS ==="
+    echo "Node.js: $(node --version)"
+    echo "npm: $(npm --version)"
+    echo "Git: $(git --version)"
+    echo ""
+    echo "=== LLM PROVIDERS ==="
+    which claude && echo "Claude Code: ✅" || echo "Claude Code: ❌"
+    which codex && echo "OpenAI Codex: ✅" || echo "OpenAI Codex: ❌"
+    echo ""
+    echo "=== HUB MCP ==="
+    [ -d "$HUB_DIR" ] && echo "Hub MCP: ✅" || echo "Hub MCP: ❌"
+    echo ""
+    echo "=== STORAGE ==="
+    echo "Home: $(du -sh ~ | cut -f1)"
+    echo "Projects: $(du -sh ~/projects 2>/dev/null | cut -f1)"
+}
+
+# ========== PATH ==========
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/bin:$PATH"
+
+# ========== FINAL ==========
+# Welcome message
+echo "🚀 Termux Dev Environment Ready!"
+ZSHRC_EOF

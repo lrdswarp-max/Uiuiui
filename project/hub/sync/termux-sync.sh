@@ -1,42 +1,52 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+# ~/.termux/hub/sync/termux-sync.sh
 
 echo "=== Sincronizando Termux ↔ Ubuntu ==="
 
-TERMUX_HOME="${TERMUX_HOME:-$HOME}"
-# Ajuste este caminho conforme o local de instalação do seu proot-distro
-UBUNTU_ROOT="$TERMUX_HOME/.proot-distro/ubuntu/root"
-
-if [[ ! -d "$UBUNTU_ROOT" ]]; then
-    # Tentar outro caminho comum mencionado na documentação
-    UBUNTU_ROOT="/data/data/com.termux/files/home/ubuntu/root"
+TERMUX_HOME="$HOME"
+# Ajustar conforme seu setup - padrão proot-distro
+UBUNTU_HOME="/data/data/com.termux/files/home/.proot-distro/installed-rootfs/ubuntu/home/root"
+if [[ ! -d "$UBUNTU_HOME" ]]; then
+    # Fallback para outro caminho comum
+    UBUNTU_HOME="/data/data/com.termux/files/home/ubuntu/root"
+fi
+if [[ ! -d "$UBUNTU_HOME" ]]; then
+    # Fallback para o caminho relativo ao HOME atual se proot estiver em .proot-distro
+    UBUNTU_HOME="$HOME/../usr/var/lib/proot-distro/installed-rootfs/ubuntu/root"
 fi
 
-if [[ ! -d "$UBUNTU_ROOT" ]]; then
-    echo "AVISO: Root do Ubuntu não encontrado em $UBUNTU_ROOT. Verifique seu setup do proot-distro."
-    # Não vamos sair com erro para permitir que o script de instalação continue se o proot ainda não foi instalado
-    exit 0
-fi
+echo "Destino Ubuntu: $UBUNTU_HOME"
 
-# Criar symlinks para shared directories
-echo "Criando symlinks em $UBUNTU_ROOT..."
-
-mkdir -p "$TERMUX_HOME/projects"
-mkdir -p "$UBUNTU_ROOT/root"
-
-# Criar links dentro do ubuntu para pastas do termux
-ln -sf "$TERMUX_HOME/projects" "$UBUNTU_ROOT/root/projects" 2>/dev/null || true
-ln -sf "$TERMUX_HOME/.config" "$UBUNTU_ROOT/root/.config" 2>/dev/null || true
-ln -sf "$TERMUX_HOME/.ssh" "$UBUNTU_ROOT/root/.ssh" 2>/dev/null || true
-
-# Sincronizar Hub MCP
-mkdir -p "$UBUNTU_ROOT/root/.termux"
-if command -v rsync >/dev/null 2>&1; then
-    rsync -av "$TERMUX_HOME/.termux/hub/" "$UBUNTU_ROOT/root/.termux/hub/" \
-        --exclude="cache/*" \
-        --exclude="*.log" 2>/dev/null || true
+if [[ ! -d "$UBUNTU_HOME" ]]; then
+    echo "Diretório do Ubuntu não encontrado. Certifique-se de que o Ubuntu está instalado."
+    # Tentar criar se for apenas simulado
+    # mkdir -p "$UBUNTU_HOME"
 else
-    cp -r "$TERMUX_HOME/.termux/hub/"* "$UBUNTU_ROOT/root/.termux/hub/" 2>/dev/null || true
-fi
+    # Criar symlinks para shared directories
+    echo "Criando symlinks..."
 
-echo "✓ Sincronização completa!"
+    # Projects
+    ln -sf "$TERMUX_HOME/projects" "$UBUNTU_HOME/projects" 2>/dev/null
+    ln -sf "$TERMUX_HOME/.config" "$UBUNTU_HOME/.config" 2>/dev/null
+    ln -sf "$TERMUX_HOME/.ssh" "$UBUNTU_HOME/.ssh" 2>/dev/null
+
+    # Sincronizar .env files
+    if [ -f "$TERMUX_HOME/.config/llm/.env" ]; then
+        mkdir -p "$UBUNTU_HOME/.config/llm"
+        cp "$TERMUX_HOME/.config/llm/.env" "$UBUNTU_HOME/.config/llm/.env"
+        chmod 600 "$UBUNTU_HOME/.config/llm/.env"
+    fi
+
+    # Sincronizar Hub MCP
+    if command -v rsync >/dev/null 2>&1; then
+        rsync -av "$TERMUX_HOME/.termux/hub/" "$UBUNTU_HOME/.termux/hub/" \
+            --exclude="cache/*" \
+            --exclude="*.log" 2>/dev/null
+    else
+        echo "rsync não encontrado, usando cp..."
+        mkdir -p "$UBUNTU_HOME/.termux/hub"
+        cp -r "$TERMUX_HOME/.termux/hub/"* "$UBUNTU_HOME/.termux/hub/" 2>/dev/null
+    fi
+
+    echo "✓ Sincronização completa!"
+fi
