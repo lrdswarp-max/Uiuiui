@@ -200,6 +200,9 @@ install_setup_scripts() {
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-proot.sh" "$TERMUX_DIR/scripts/setup-proot.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-code-server.sh" "$TERMUX_DIR/scripts/setup-code-server.sh" || return 1
   safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-llms.sh" "$TERMUX_DIR/scripts/setup-llms.sh" || return 1
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/setup-hub.sh" "$TERMUX_DIR/scripts/setup-hub.sh" || return 1
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/create-zshrc.sh" "$TERMUX_DIR/scripts/create-zshrc.sh" || return 1
+  safe_copy "$CURRENT_STEP" "$ROOT_DIR/scripts/monitor.sh" "$TERMUX_DIR/scripts/monitor.sh" || return 1
 }
 
 install_hub() {
@@ -317,10 +320,11 @@ run_install() {
   log "  $TERMUX_DIR/scripts/setup-base.sh"
   log "  $TERMUX_DIR/scripts/setup-git-ssh.sh seu@email.com"
   [[ "$INCLUDE_LLM" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-llms.sh"
+  [[ "$INCLUDE_HUB" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-hub.sh"
+  [[ "$INCLUDE_ZSHRC" == "1" ]] && log "  $TERMUX_DIR/scripts/create-zshrc.sh"
   [[ "$INCLUDE_ZSH" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-zsh.sh"
   [[ "$INCLUDE_PROOT" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-proot.sh"
   [[ "$INCLUDE_CODE_SERVER" == "1" ]] && log "  $TERMUX_DIR/scripts/setup-code-server.sh"
-  [[ "$INCLUDE_ZSHRC" == "1" ]] && log "  cp $TARGET_HOME/.zshrc.template $TARGET_HOME/.zshrc"
 
   if [[ "$INTERACTIVE" == "1" ]]; then
     echo ""

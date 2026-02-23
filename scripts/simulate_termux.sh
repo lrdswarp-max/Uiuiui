@@ -54,6 +54,10 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 MOCK
+cat > "$MOCKS_DIR/watch" <<'MOCK'
+#!/bin/bash
+echo "[mock watch] $*"
+MOCK
 touch "$MOCKS_DIR/zsh"
 touch "$MOCKS_DIR/nvim"
 touch "$MOCKS_DIR/claude"
@@ -84,6 +88,8 @@ bash "$SIM_HOME/.termux/scripts/setup-zsh.sh"
 bash "$SIM_HOME/.termux/scripts/setup-proot.sh"
 bash "$SIM_HOME/.termux/scripts/setup-code-server.sh"
 bash "$SIM_HOME/.termux/scripts/setup-llms.sh"
+bash "$SIM_HOME/.termux/scripts/setup-hub.sh"
+bash "$SIM_HOME/.termux/scripts/create-zshrc.sh"
 
 # 5. Validar Hub
 echo "[sim] 5. Validando Hub"
@@ -106,9 +112,12 @@ check_file "$SIM_HOME/.termux/aliases.sh"
 check_file "$SIM_HOME/.termux/hub/hub.sh"
 check_file "$SIM_HOME/.termux/scripts/setup-base.sh"
 check_file "$SIM_HOME/.termux/scripts/setup-llms.sh"
+check_file "$SIM_HOME/.termux/scripts/setup-hub.sh"
+check_file "$SIM_HOME/.termux/scripts/create-zshrc.sh"
+check_file "$SIM_HOME/.termux/scripts/monitor.sh"
 check_file "$SIM_HOME/.config/llm/config.json"
 check_file "$SIM_HOME/.config/llm/.env"
-check_file "$SIM_HOME/.zshrc.template"
+check_file "$SIM_HOME/.zshrc"
 check_file "$SIM_HOME/.ssh/id_ed25519"
 
 if [[ $ERRORS -eq 0 ]]; then
