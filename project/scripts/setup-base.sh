@@ -9,10 +9,28 @@ APT_BIN="${APT_BIN:-apt}"
 log "Instalando base de desenvolvimento no Termux"
 run "$PKG_BIN update"
 run "$PKG_BIN upgrade -y"
-run "$PKG_BIN install -y git nodejs-lts npm python3 curl wget vim nano zsh openssh"
+run "$PKG_BIN install -y \
+    git \
+    nodejs-lts \
+    npm \
+    python3 \
+    build-essential \
+    curl \
+    wget \
+    vim \
+    nano \
+    zsh \
+    openssh \
+    postgresql \
+    redis \
+    sqlite \
+    proot-distro \
+    rsync \
+    jq \
+    neovim"
 
 log "Validação de binários"
-for cmd in git node npm python3 curl zsh; do
+for cmd in git node npm python3 curl zsh sqlite3 proot-distro rsync jq nvim; do
   if command -v "$cmd" >/dev/null 2>&1; then
     log "ok: $cmd -> $(command -v "$cmd")"
   else

@@ -1,8 +1,20 @@
 {
-  "default_provider": "openai",
-  "providers": {
-    "openai": {"model": "gpt-5-mini"},
-    "groq": {"model": "llama-3.3-70b"},
-    "anthropic": {"model": "claude-sonnet-4"}
+  "llm_providers": {
+    "claude": {
+      "cli": "claude",
+      "enabled": true,
+      "default": true,
+      "model": "claude-3-5-sonnet-latest"
+    },
+    "openai": {
+      "cli": "openai",
+      "enabled": true,
+      "model": "gpt-4o"
+    },
+    "groq": {
+      "cli": "groq",
+      "enabled": true,
+      "model": "llama-3.3-70b"
+    }
   }
 }
