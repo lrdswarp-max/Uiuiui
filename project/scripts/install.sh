@@ -49,7 +49,7 @@ init_paths() {
 }
 
 state_write() {
-  mkdir -p "$STATE_DIR"
+  [[ "${DRY_RUN:-0}" != "1" ]] && mkdir -p "$STATE_DIR"
   {
     echo "TARGET_HOME='$TARGET_HOME'"
     echo "INCLUDE_SETUP_SCRIPTS=$INCLUDE_SETUP_SCRIPTS"
@@ -98,6 +98,10 @@ mark_completed() {
 
 manifest_file() {
   local step="$1"
+  if [[ "${DRY_RUN:-0}" == "1" ]]; then
+    echo "/dev/null"
+    return 0
+  fi
   mkdir -p "$STATE_DIR/manifests" "$STATE_DIR/backups"
   echo "$STATE_DIR/manifests/${step}.log"
 }
@@ -353,7 +357,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 init_paths
-mkdir -p "$STATE_DIR"
+[[ "${DRY_RUN:-0}" != "1" ]] && mkdir -p "$STATE_DIR"
 state_load
 
 if [[ "$RESET_STATE" == "1" ]]; then
