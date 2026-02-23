@@ -1,0 +1,8 @@
+{
+  "default_provider": "openai",
+  "providers": {
+    "openai": {"model": "gpt-5-mini"},
+    "groq": {"model": "llama-3.3-70b"},
+    "anthropic": {"model": "claude-sonnet-4"}
+  }
+}
