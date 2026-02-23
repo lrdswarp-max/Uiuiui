@@ -118,6 +118,12 @@ safe_mkdir() {
 safe_copy() {
   local step="$1" src="$2" dest="$3"
   local backup
+
+  if [[ ! -f "$src" ]]; then
+    err "Arquivo fonte não encontrado: $src"
+    return 1
+  fi
+
   if [[ -e "$dest" ]]; then
     backup="$STATE_DIR/backups/${step}__$(echo "$dest" | tr '/ ' '__')"
     run "cp -a '$dest' '$backup'"
@@ -214,18 +220,19 @@ install_llm() {
 
 install_zsh() {
   [[ "$INCLUDE_ZSH" == "1" ]] || { log "Setup Zsh desativado pelo usuário"; return 0; }
-  # O setup real é feito pelo script copiado, aqui apenas garantimos que o script está lá
-  # e informamos o usuário.
+  log "Script setup-zsh.sh preparado em $TERMUX_DIR/scripts/"
   return 0
 }
 
 install_proot() {
   [[ "$INCLUDE_PROOT" == "1" ]] || { log "Setup Proot desativado pelo usuário"; return 0; }
+  log "Script setup-proot.sh preparado em $TERMUX_DIR/scripts/"
   return 0
 }
 
 install_code_server() {
   [[ "$INCLUDE_CODE_SERVER" == "1" ]] || { log "Setup Code-Server desativado pelo usuário"; return 0; }
+  log "Script setup-code-server.sh preparado em $TERMUX_DIR/scripts/"
   return 0
 }
 

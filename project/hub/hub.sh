@@ -8,7 +8,6 @@ mkdir -p "$HUB_DIR"
 init_db() {
   if [[ ! -f "$HUB_DB" ]]; then
     if ! command -v sqlite3 >/dev/null 2>&1; then
-        # Se não tiver sqlite3, fallback para o modo notas (opcional, mas melhor avisar)
         return
     fi
     sqlite3 "$HUB_DB" <<SQL_EOF
@@ -38,7 +37,7 @@ hub() {
 
     if ! command -v sqlite3 >/dev/null 2>&1; then
         echo "sqlite3 não encontrado. Por favor, instale com: pkg install sqlite"
-        exit 1
+        return 1
     fi
 
     case "$action" in
@@ -57,23 +56,23 @@ hub() {
             ;;
         add)
             local name="${1:-}"
-            local category="${2:-}"
-            local description="${3:-}"
-            [[ -z "$name" || -z "$category" || -z "$description" ]] && { echo "uso: hub add <name> <cat> <desc>"; exit 1; }
+            local category="${2:-note}"
+            local description="${3:-$name}"
+            [[ -z "$name" ]] && { echo "uso: hub add <name> [cat] [desc]"; return 1; }
             local n_esc="${name//\'/\'\'}"
             local c_esc="${category//\'/\'\'}"
             local d_esc="${description//\'/\'\'}"
             sqlite3 "$HUB_DB" "INSERT INTO skills (name, category, description) VALUES ('$n_esc', '$c_esc', '$d_esc')"
-            echo "✓ Skill '$name' adicionado!"
+            echo "✓ Item '$name' adicionado em '$category'!"
             ;;
         *)
             echo "Hub MCP - Central Knowledge System"
             echo ""
             echo "Uso:"
-            echo "  hub ask <comando>        - Buscar documentação"
-            echo "  hub search <palavra>     - Buscar por palavra-chave"
-            echo "  hub list                 - Listar categorias"
-            echo "  hub add <name> <cat> <desc> - Adicionar skill"
+            echo "  hub ask <comando>           - Buscar documentação"
+            echo "  hub search <palavra>        - Buscar por palavra-chave"
+            echo "  hub list                    - Listar categorias"
+            echo "  hub add <name> [cat] [desc] - Adicionar item (padrão cat: note)"
             ;;
     esac
 }
